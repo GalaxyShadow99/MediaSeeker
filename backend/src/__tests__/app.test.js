@@ -13,6 +13,14 @@ describe('app', () => {
     });
   });
 
+  describe('GET /docs/', () => {
+    it('should serve Swagger UI documentation with 200 OK', async () => {
+      const response = await request(app).get('/api-docs/');
+      expect(response.statusCode).toBe(200);
+      expect(response.text).toContain('Swagger UI');
+    });
+  });
+
   describe('GET /404', () => {
     beforeEach(() => {
       // Avoid polluting the test output with 404 error messages
@@ -22,13 +30,13 @@ describe('app', () => {
     it('should respond to the GET method with a 404 for a route that does not exist', async () => {
       const response = await request(app).get('/404');
       expect(response.statusCode).toBe(404);
-      expect(response.text).toBe('{"message":"Not Found"}');
+      expect(response.body.success).toBe(false);
     });
 
     it('should respond to the POST method with a 404 for a route that does not exist', async () => {
       const response = await request(app).post('/404');
       expect(response.statusCode).toBe(404);
-      expect(response.text).toBe('{"message":"Not Found"}');
+      expect(response.body.success).toBe(false);
     });
   });
 });

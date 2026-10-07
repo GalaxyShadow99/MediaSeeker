@@ -11,11 +11,18 @@
     "lint:fix": "eslint --fix ."
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^13.0.3",
     "cookie-parser": "^1.4.7",
-    "express": "^4.21.2",
+    "dotenv": "^18.0.6",
+    "express": "^4.22.3",
     "helmet": "^8.0.0",
     "http-errors": "^2.0.0",
-    "morgan": "^1.10.0"
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.0",
+    "serve-favicon": "^2.5.1",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "eslint": "^8.57.1",

@@ -5,5 +5,22 @@
     "node": true,
     "es6": true,
     "jest": true
+  },
+  "rules": {
+    "camelcase": ["error", {
+      "properties": "never",
+      "ignoreDestructuring": true,
+      "ignoreImports": true,
+      "allow": [
+        "tmdb_id",
+        "media_type",
+        "original_title",
+        "poster_path",
+        "release_date",
+        "season_number",
+        "episode_number",
+        "next_air_date"
+      ]
+    }]
   }
 }
