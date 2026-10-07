@@ -4,7 +4,6 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    types: [opened, synchronize, reopened, closed]
 
 jobs:
   build:
@@ -12,26 +11,20 @@ jobs:
 
     defaults:
       run:
+        working-directory: ./backend
         shell: bash
     
     steps:
     - uses: actions/checkout@v4
-    - name: Use Node.js '24.X'
+    - name: Use Node.js 24
       uses: actions/setup-node@v4
       with:
-        node-version: '24.X'
+        node-version: '24'
         cache: 'npm'
-    - name : "Install dependencies"
-      run: |
-        npm ci
-    - name : "Running tests"
-      run: |
-        npm run test
-    - name : "Run linting"
-      run: |
-        echo "Running linting"
-        npm run lint
-    - name : "Run linting"
-      run: |
-        echo "Running linting"
-        npm run lint
+        cache-dependency-path: 'backend/package-lock.json'
+    - name: "Install dependencies"
+      run: npm ci
+    - name: "Run linting"
+      run: npm run lint
+    - name: "Running tests"
+      run: npm test
