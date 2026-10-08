@@ -44,4 +44,3 @@ def login(request: Request, payload: LoginRequest, db: sqlite3.Connection = Depe
             },
         },
     )
-
