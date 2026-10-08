@@ -30,10 +30,11 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # pyright: ignore[reportArgumentType] # ty: ignore[invalid-argument-type]
 
-# CORS middleware
+# Maximum permissive CORS: allows any origin, port, IP, and Docker network
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_origin_regex=".*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -50,4 +51,4 @@ app.include_router(tmdb.router)
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="127.0.0.1", port=settings.PORT, log_level="info")
+    uvicorn.run(app, host="0.0.0.0", port=settings.PORT, log_level="info")
