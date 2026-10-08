@@ -6,31 +6,26 @@ You are a full-stack developer assisting on the **MediaSeeker** project.
 
 ## Commands
 
-All backend commands run inside the `backend/` directory:
+All backend commands run inside the `backend/` directory using **`uv`**:
 
 ```bash
 cd backend
 
-# Install dependencies
-npm install
+# Install dependencies (syncs virtual environment)
+uv sync
 
-# Run server in development mode (nodemon on http://localhost:3000)
-npm run dev
+# Run development server (FastAPI with auto-reload on http://localhost:8000)
+uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
-# Run production build
-npm start
+# Run automated tests (Pytest)
+uv run pytest -v
 
-# Run tests (Jest + Supertest)
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Code style & linting
-npm run lint
-npm run lint:fix
-
+# Run code style & linting (Ruff)
+uv run ruff check
+uv run ruff format --check
+uv run ruff format  # Apply auto-formatting
 ```
+
 ---
 
 ## Project Structure & Roles
@@ -38,33 +33,36 @@ npm run lint:fix
 ```text
 MediaSeeker/
 ├── AGENTS.md              # AI agent guidelines & project cheatsheet
-├── frontend/              # Client-side user interface
-└── backend/               # Node.js / Express REST API
-    ├── package.json       # Backend dependencies and scripts
-    ├── README.md          # Setup instructions & documentation
-    └── src/
-        ├── bin/www        # HTTP server entry point: sets PORT and handles listening/errors
-        ├── app.js         # Core Express config: registers middlewares, routes, and 404/500 handlers
-        ├── middleware/    # Custom Express middlewares (auth, validation, logging, headers)
-        ├── routes/        # API routers mapping URL endpoints to request handlers
-        └── __tests__/     # Jest & Supertest integration and unit test suites
-
+├── frontend/              # Client-side user interface (React)
+└── backend/               # Python / FastAPI REST API
+    ├── pyproject.toml     # uv project configuration and dependencies
+    ├── uv.lock            # Exact locked dependencies
+    ├── app/
+    │   ├── main.py        # FastAPI app, lifespan, CORS, and routers mounting
+    │   ├── config.py      # Pydantic Settings (.env configuration)
+    │   ├── database.py    # Raw SQLite connection, WAL mode & table schemas
+    │   ├── dependencies.py# JWT security & admin authentication dependencies
+    │   ├── schemas/       # Pydantic validation schemas (Auth, User, Media)
+    │   ├── routers/       # API endpoints (system, auth, admin, media)
+    │   ├── services/      # External integrations (TMDB client httpx)
+    │   └── utils/         # Password hashing (bcrypt) & JWT helpers
+    └── tests/             # Pytest test suites (TestClient)
 ```
 
 ### Who Does What
 
-* **`frontend/`**: Manages the user interface, client-side state, and requests to the API.
-* **`backend/src/bin/www`**: Boots up the Node HTTP server. It imports `app.js` and listens on `process.env.PORT || 3000`.
-* **`backend/src/app.js`**: Central application factory. Configures global middlewares (CORS, JSON parser, Helmet, Morgan) and mounts route modules.
-* **`backend/src/routes/`**: Handles endpoint logic, extracts params/body, and returns standard JSON responses.
-* **`backend/src/middleware/`**: Intercepts requests for authentication, schema validation, and error management before reaching handlers.
-* **`backend/src/__tests__/`**: Ensures API stability by executing automated HTTP integration tests with Supertest against `app.js`.
+* **`frontend/`**: Manages user interface, state, and API requests.
+* **`backend/app/main.py`**: Boots up the FastAPI application with auto-generated Swagger UI (`/docs`) and ReDoc (`/redoc`).
+* **`backend/app/database.py`**: Manages SQLite connections and executes direct SQL queries with WAL mode and foreign keys.
+* **`backend/app/schemas/`**: Pydantic models for incoming request validation and Swagger documentation schemas.
+* **`backend/app/routers/`**: HTTP endpoints (auth, admin, media CRUD) returning typed responses.
+* **`backend/tests/`**: Automated integration test suite running with Pytest and TestClient.
 
 ---
 
 ## Guardrails
 
-* ✅ Run `npm test` and `npm run lint` inside `backend/` before validating any change.
-* ✅ Always return JSON responses with explicit HTTP status codes (`200`, `201`, `400`, `404`, `500`).
-* ⚠️ Ask before installing new dependencies or altering `bin/www`.
-* 🚫 Never commit anything i'll do it
+* ✅ Run `uv run pytest` and `uv run ruff check` inside `backend/` before validating any change.
+* ✅ Use **pure SQL** with parameterized queries (no heavy ORMs).
+* ⚠️ Ask before adding new third-party packages.
+* 🚫 Never commit anything i'll do it.
