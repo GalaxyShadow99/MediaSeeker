@@ -17,27 +17,14 @@ class MediaStatus(StrEnum):
 
 class MediaCreate(BaseModel):
     tmdb_id: int = Field(gt=0, description="TMDB unique identifier")
-    media_type: MediaType
-    title: str = Field(min_length=1)
-    original_title: str | None = None
-    poster_path: str | None = None
-    overview: str | None = None
-    release_date: date | None = None
-    season_number: int | None = None
-    episode_number: int | None = None
-    next_air_date: date | None = None
-    status: MediaStatus = MediaStatus.UPCOMING
+    media_type: MediaType = MediaType.MOVIE
 
 
 class MediaUpdate(BaseModel):
-    tmdb_id: int | None = Field(default=None, gt=0)
-    media_type: MediaType | None = None
     title: str | None = None
-    original_title: str | None = None
-    poster_path: str | None = None
     overview: str | None = None
-    release_date: date | None = None
+    poster_path: str | None = None
+    status: MediaStatus | None = None
     season_number: int | None = None
     episode_number: int | None = None
     next_air_date: date | None = None
-    status: MediaStatus | None = None

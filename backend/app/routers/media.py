@@ -5,10 +5,21 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.database import get_db
 from app.dependencies import get_current_user
+from app.routers.tmdb import fetch_tmdb_details
 from app.schemas.apiResponse import ApiResponse
 from app.schemas.media import MediaCreate, MediaStatus, MediaType, MediaUpdate
 
 router = APIRouter(prefix="/media", tags=["Medias"], dependencies=[Depends(get_current_user)])
+
+
+def determine_media_status(tmdb_status: str | None, release_date_str: str | None) -> MediaStatus:
+    """Determine whether the media is released or upcoming based on TMDB metadata."""
+    today_str = date.today().isoformat()
+    if release_date_str and str(release_date_str) <= today_str:
+        return MediaStatus.RELEASED
+    if tmdb_status and str(tmdb_status).lower() in ("released", "ended", "returning series"):
+        return MediaStatus.RELEASED
+    return MediaStatus.UPCOMING
 
 
 @router.get("", response_model=ApiResponse)
@@ -51,26 +62,45 @@ def get_media_by_id(media_id: int, db: sqlite3.Connection = Depends(get_db)):
 
 @router.post("", response_model=ApiResponse, status_code=status.HTTP_201_CREATED)
 def create_media(payload: MediaCreate, db: sqlite3.Connection = Depends(get_db)):
+    """Fetch details from TMDB and insert the media into the database with computed status."""
+    try:
+        details = fetch_tmdb_details(payload.tmdb_id, media_type=payload.media_type.value)
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Failed to fetch media details from TMDB: {err}",
+        ) from err
+
+    # Extract fields from TMDB dictionary
+    title = details.get("title") or details.get("name") or "Unknown"
+    original_title = details.get("original_title") or details.get("original_name")
+    poster_path = details.get("poster_path")
+    overview = details.get("overview")
+    release_date = details.get("release_date") or details.get("first_air_date")
+
+    # Compute status dynamically based on release date & TMDB status
+    tmdb_status = details.get("status")
+    calculated_status = determine_media_status(
+        tmdb_status, str(release_date) if release_date else None
+    )
+
     try:
         cursor = db.execute(
             """
             INSERT INTO medias (
                 tmdb_id, media_type, title, original_title, poster_path,
-                overview, release_date, season_number, episode_number, next_air_date, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                overview, release_date, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 payload.tmdb_id,
                 payload.media_type.value,
-                payload.title,
-                payload.original_title,
-                payload.poster_path,
-                payload.overview,
-                str(payload.release_date) if payload.release_date else None,
-                payload.season_number,
-                payload.episode_number,
-                str(payload.next_air_date) if payload.next_air_date else None,
-                payload.status.value,
+                title,
+                original_title,
+                poster_path,
+                overview,
+                str(release_date) if release_date else None,
+                calculated_status.value,
             ),
         )
         db.commit()

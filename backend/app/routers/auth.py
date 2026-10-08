@@ -33,5 +33,14 @@ def login(request: Request, payload: LoginRequest, db: sqlite3.Connection = Depe
     return ApiResponse(
         success=True,
         message="User logged in successfully",
-        data={"access_token": token, "token_type": "bearer"},
+        data={
+            "access_token": token,
+            "token_type": "bearer",
+            "user": {
+                "id": user["id"],
+                "username": user["username"],
+                "email": user["email"],
+                "is_admin": bool(user["is_admin"]),
+            },
+        },
     )

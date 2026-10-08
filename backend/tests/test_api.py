@@ -150,18 +150,27 @@ def test_admin_create_and_list_users():
     assert any(u["username"] == unique_user for u in users)
 
 
-def test_media_crud_operations():
+def test_media_crud_operations(monkeypatch):
     headers = get_auth_headers()
     tmdb_id = int(time.time_ns() % 10000000)
 
-    # 1. Create Media
+    # Mock fetch_tmdb_details
+    def mock_fetch(tid, media_type="movie"):
+        return {
+            "id": tid,
+            "title": "Interstellar",
+            "original_title": "Interstellar",
+            "poster_path": "/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
+            "overview": "A team of explorers travel through a wormhole in space.",
+            "release_date": "2014-11-05",
+        }
+
+    monkeypatch.setattr("app.routers.media.fetch_tmdb_details", mock_fetch)
+
+    # 1. Create Media with just tmdb_id & media_type
     media_payload = {
         "tmdb_id": tmdb_id,
         "media_type": "movie",
-        "title": "Interstellar",
-        "original_title": "Interstellar",
-        "release_date": "2014-11-05",
-        "status": "released",
     }
     create_res = client.post("/media", json=media_payload, headers=headers)
     assert create_res.status_code == 201
@@ -169,6 +178,7 @@ def test_media_crud_operations():
     media_id = media["id"]
     assert media["title"] == "Interstellar"
     assert media["tmdb_id"] == tmdb_id
+    assert media["status"] == "released"
 
     # 2. Get Media List & by ID
     list_res = client.get("/media?type=movie", headers=headers)
